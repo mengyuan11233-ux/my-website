@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(echo \"node_modules/\")",
+      "Bash(npm install *)"
+    ]
+  }
+}

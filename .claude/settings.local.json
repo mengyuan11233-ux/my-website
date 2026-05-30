@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(start \"\" \"c:\\\\Users\\\\张梦媛\\\\Desktop\\\\个人网站\\\\index.html\")",
+      "Bash(pip list *)",
+      "Bash(pip install *)",
+      "Bash(git init *)",
+      "Bash(git config *)"
+    ]
+  }
+}

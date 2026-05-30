@@ -1,0 +1,13 @@
+{
+  "name": "zhangmengyuan-website",
+  "version": "1.0.0",
+  "description": "张梦媛个人网站",
+  "homepage": "https://mengyuan11233-ux.github.io/my-website",
+  "scripts": {
+    "predeploy": "echo 'Static site ready'",
+    "deploy": "gh-pages -d ."
+  },
+  "devDependencies": {
+    "gh-pages": "^6.3.0"
+  }
+}

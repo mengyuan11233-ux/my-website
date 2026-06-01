@@ -1160,7 +1160,7 @@
       border:1px solid rgba(255,255,255,0.08);
       margin-bottom:40px;
     }
-    .ac-detail-window embed,.ac-detail-window video,.ac-detail-window object{
+    .ac-detail-window embed,.ac-detail-window iframe,.ac-detail-window video,.ac-detail-window object{
       width:100%;display:block;border:none;
     }
     .ac-detail-text{
@@ -1220,7 +1220,7 @@
       aspect-ratio:1.414;background:#fff;position:relative;
       width:100%;overflow:hidden;
     }
-    .portfolio-preview embed{
+    .portfolio-preview embed,.portfolio-preview iframe{
       position:absolute;inset:0;width:100%;height:100%;
       border:none;display:block;
     }
@@ -1262,7 +1262,7 @@
     .pdf-viewer-content{
       flex:1;padding:20px;padding-top:70px;
     }
-    .pdf-viewer-content embed{
+    .pdf-viewer-content iframe{
       width:100%;height:100%;border:none;border-radius:8px;
     }
     .portfolio-item{
@@ -1405,7 +1405,7 @@
       .ac-card-info{padding:8px 10px}
       .ac-card-title{font-size:0.72rem}
       .ac-detail-page{padding:50px 12px 30px}
-      .ac-detail-window embed,.ac-detail-window object{height:400px}
+      .ac-detail-window embed,.ac-detail-window iframe,.ac-detail-window object{height:400px}
       .jm-overlay .jm-modal-topbar{padding:12px 14px}
       .jm-overlay .jm-modal-scroll{padding:20px 14px 30px}
       .jm-dim-row{grid-template-columns:80px 1fr 40px;gap:8px;padding:12px 14px}
@@ -3163,7 +3163,7 @@
   <div class="pdf-viewer-overlay" id="pdfViewer">
     <button class="pdf-viewer-close" id="pdfViewerClose" title="关闭">✕</button>
     <div class="pdf-viewer-content">
-      <embed id="pdfEmbed" src="" type="application/pdf" width="100%" height="100%">
+      <iframe id="pdfEmbed" width="100%" height="100%" style="border:none;border-radius:8px;" allow="fullscreen"></iframe>
     </div>
   </div>
 
@@ -3194,7 +3194,7 @@
           item.innerHTML =
             '<div class="portfolio-preview">'+
               '<button class="portfolio-expand-btn" title="放大查看">⛶</button>'+
-              '<embed src="'+encodeURI(pdfSrc)+'" type="application/pdf" width="100%" height="100%">'+
+              '<iframe src="'+encodeURI(pdfSrc)+'" width="100%" height="100%" style="border:none;" allow="fullscreen"></iframe>'+
             '</div>'+
             '<div class="portfolio-label">'+name+'</div>';
           grid.appendChild(item);

@@ -2934,7 +2934,7 @@
         if(!overlay || !innerEl) return;
         innerEl.innerHTML =
           '<div class="ac-detail-text">'+(item.desc || '')+'</div>'+
-          '<div class="ac-detail-window"><embed src="'+encodeURI(item.file)+'" type="application/pdf" width="100%" height="700px"></div>';
+          '<div class="ac-detail-window"><iframe src="'+encodeURI(item.file)+'" width="100%" height="700px" style="border:none;"></iframe></div>'+
         overlay.classList.add('open');
         document.body.style.overflow = 'hidden';
       }
@@ -2976,7 +2976,7 @@
           card.className = 'ac-card border-glow-card';
           card.innerHTML =
             '<div style="width:100%;height:200px;background:#fff;overflow:hidden;">'+
-              '<embed src="'+encodeURI(item.file)+'" type="application/pdf" width="100%" height="100%" style="border:none;">'+
+              '<iframe src="'+encodeURI(item.file)+'" width="100%" height="100%" style="border:none;"></iframe>'+
             '</div>'+
             '<div class="ac-card-info"><div class="ac-card-category">📄 文档 · PDF</div><h3 class="ac-card-title">'+item.name+'</h3></div>';
           card.addEventListener('click', function(){ openCardDetail(item); });

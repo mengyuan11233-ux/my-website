@@ -1462,24 +1462,11 @@
     <!-- Apple-style Cards Carousel — Two Sections -->
     <div style="margin-top:48px">
       <div class="campus-section-title" id="portfolio"><h2>作品精选</h2></div>
-      <!-- Section 1: 动态创作 -->
-      <div style="margin-bottom:40px">
-        <h3 style="color:#fff;font-family:'Inter',sans-serif;font-weight:700;font-size:1.2rem;margin:0 0 16px;padding-left:4px;">🎬 动态创作</h3>
-        <div class="ac-carousel-wrap">
-          <div class="ac-carousel-track" id="acTrack1"></div>
-          <div class="ac-carousel-nav">
-            <button id="acPrev1">←</button><button id="acNext1">→</button>
-          </div>
-        </div>
-      </div>
-      <!-- Section 2: 研究与策划 -->
-      <div>
+      <div class="ac-carousel-wrap">
         <h3 style="color:#fff;font-family:'Inter',sans-serif;font-weight:700;font-size:1.2rem;margin:0 0 16px;padding-left:4px;">📊 研究与策划</h3>
-        <div class="ac-carousel-wrap">
-          <div class="ac-carousel-track" id="acTrack2"></div>
-          <div class="ac-carousel-nav">
-            <button id="acPrev2">←</button><button id="acNext2">→</button>
-          </div>
+        <div class="ac-carousel-track" id="acTrack"></div>
+        <div class="ac-carousel-nav">
+          <button id="acPrev">←</button><button id="acNext">→</button>
         </div>
       </div>
       <div class="ac-detail-panel" id="acDetail">
@@ -2941,17 +2928,13 @@
       });
 
       // ── AppleCards Carousel (Two Sections) ──
-      function openCardDetail(item, isVideo){
+      function openCardDetail(item){
         var overlay = document.getElementById('acDetailOverlay');
         var innerEl = document.getElementById('acDetailInner');
         if(!overlay || !innerEl) return;
         var html = '';
         html += '<div class="ac-detail-text">'+(item.desc || '')+'</div>';
-        if(isVideo){
-          html += '<div class="ac-detail-window"><video src="'+encodeURI(item.file)+'" controls style="width:100%;max-height:70vh;object-fit:contain;"></video></div>';
-        } else {
-          html += '<div class="ac-detail-window"><embed src="'+encodeURI(item.file)+'" type="application/pdf" width="100%" height="700px"></div>';
-        }
+        html += '<div class="ac-detail-window"><embed src="'+encodeURI(item.file)+'" type="application/pdf" width="100%" height="700px"></div>';
         innerEl.innerHTML = html;
         overlay.classList.add('open');
         document.body.style.overflow = 'hidden';
@@ -2972,17 +2955,6 @@
         document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && overlay && overlay.classList.contains('open')) closeCardDetail(); });
       });
 
-      // Section 1: 动态创作 (videos)
-      var videoFiles = [
-        {name:'AIGC短视频', file:'其他作品/动态创作/AIGC短视频.mp4', desc:''},
-        {name:'vlog拍摄', file:'其他作品/动态创作/vlog拍摄.mp4', desc:''},
-        {name:'创意纪录片', file:'其他作品/动态创作/创意纪录片.mp4', desc:''},
-        {name:'原创悬疑类短片', file:'其他作品/动态创作/原创悬疑类短片.mp4', desc:''},
-        {name:'岳州扇宣传片', file:'其他作品/动态创作/岳州扇宣传片.mp4', desc:''},
-        {name:'爱情短片', file:'其他作品/动态创作/爱情短片.mp4', desc:''}
-      ];
-
-      // Section 2: 研究与策划 (docs)
       var docFiles = [
         {name:'Vlookup函数应用', file:'其他作品/研究与策划/Vlookup函数应用.pdf', desc:'<b>数据运营分析报告</b> | 技能：Excel、数据透视、数据可视化<br><br>负责多维度数据汇总、销量统计、分类分析；使用 Vlookup、数据透视表完成用户/商品数据整合；输出可视化报表，提炼运营结论。<br><br>🏷️ 锻炼：数据驱动、运营数据分析能力'},
         {name:'运动类APP使用调研', file:'其他作品/研究与策划/关于运动类APP的使用调研.pdf', desc:'<b>运动APP用户调研</b> | 技能：用户研究、需求分析、产品洞察<br><br>调研运动类APP使用行为、偏好、痛点；分析用户画像、核心需求、传播机会；输出新媒体运营策略与选题方向。<br><br>🏷️ 锻炼：用户思维、产品敏感度、运营策略能力'},
@@ -2994,7 +2966,7 @@
         {name:'西贝公关策略', file:'其他作品/研究与策划/西贝公关策略.pdf', desc:'<b>餐饮品牌公关策略</b> | 技能：公关策划、活动运营、品牌传播<br><br>分析西贝品牌传播现状与用户口碑；策划公关活动与新媒体传播方案；输出餐饮品牌运营建议。<br><br>🏷️ 锻炼：品牌策划、活动运营、用户沟通'}
       ];
 
-      function buildCarousel(trackId, prevId, nextId, items, isVideo){
+      function buildCarousel(trackId, prevId, nextId, items){
         var track = document.getElementById(trackId);
         var prev = document.getElementById(prevId);
         var next = document.getElementById(nextId);
@@ -3003,34 +2975,14 @@
         items.forEach(function(item, i){
           var card = document.createElement('div');
           card.className = 'ac-card border-glow-card';
-          if(isVideo){
-            card.innerHTML =
-              '<div style="position:relative;width:100%;height:200px;background:#1a1a20;display:flex;align-items:center;justify-content:center;overflow:hidden;">'+
-                '<video src="'+encodeURI(item.file)+'" muted preload="metadata" style="width:100%;height:100%;object-fit:cover;"></video>'+
-                '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.3);cursor:pointer;">'+
-                  '<div style="width:44px;height:44px;border-radius:50%;background:rgba(239,76,172,0.7);display:flex;align-items:center;justify-content:center;font-size:1.1rem;">▶</div>'+
-                '</div>'+
-              '</div>'+
-              '<div class="ac-card-info"><div class="ac-card-category">🎬 视频</div><h3 class="ac-card-title">'+item.name+'</h3></div>';
-          } else if(item.file.endsWith('.pdf')){
-            card.innerHTML =
-              '<div style="width:100%;height:200px;background:#fff;overflow:hidden;">'+
-                '<embed src="'+encodeURI(item.file)+'" type="application/pdf" width="100%" height="100%" style="border:none;">'+
-              '</div>'+
-              '<div class="ac-card-info"><div class="ac-card-category">📄 文档 · PDF</div><h3 class="ac-card-title">'+item.name+'</h3></div>';
-          } else {
-            var ext = item.file.split('.').pop().toLowerCase();
-            var icon = ext==='pptx'?'📊':'📝';
-            card.innerHTML =
-              '<div style="width:100%;height:200px;background:linear-gradient(135deg,#1a1a24,#222230);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:3.5rem;gap:8px;">'+
-                '<span>'+icon+'</span>'+
-                '<span style="font-size:0.75rem;color:var(--text-muted);font-family:JetBrains Mono,monospace;">.'+ext.toUpperCase()+'</span>'+
-              '</div>'+
-              '<div class="ac-card-info"><div class="ac-card-category">📊 文档 · '+ext.toUpperCase()+'</div><h3 class="ac-card-title">'+item.name+'</h3></div>';
-          }
+          card.innerHTML =
+            '<div style="width:100%;height:200px;background:#fff;overflow:hidden;">'+
+              '<embed src="'+encodeURI(item.file)+'" type="application/pdf" width="100%" height="100%" style="border:none;">'+
+            '</div>'+
+            '<div class="ac-card-info"><div class="ac-card-category">📄 文档 · PDF</div><h3 class="ac-card-title">'+item.name+'</h3></div>';
 
           card.addEventListener('click', function(){
-            openCardDetail(item, isVideo);
+            openCardDetail(item);
           });
           track.appendChild(card);
         });
@@ -3039,13 +2991,11 @@
         next.addEventListener('click', function(){ scrollPaused=true; track.scrollBy({left:250,behavior:'smooth'}); setTimeout(function(){scrollPaused=false;},1500); });
       }
 
-      buildCarousel('acTrack1', 'acPrev1', 'acNext1', videoFiles, true);
-      buildCarousel('acTrack2', 'acPrev2', 'acNext2', docFiles, false);
+      buildCarousel('acTrack', 'acPrev', 'acNext', docFiles);
 
-      // ── Auto-scroll carousels ──
+      // ── Auto-scroll carousel ──
       var tracks = [
-        {el:document.getElementById('acTrack1'), speed:1.2},
-        {el:document.getElementById('acTrack2'), speed:-0.9}
+        {el:document.getElementById('acTrack'), speed:-0.9}
       ];
       var scrollPaused = false;
 

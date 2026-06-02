@@ -1415,6 +1415,7 @@
       text-shadow:0 0 12px rgba(239,76,172,0.3);
     }
     @media(max-width:768px){
+      .section-contact{padding:80px 20px}
       .contact-card{padding:32px 24px}
     }
 
@@ -1435,6 +1436,22 @@
       .about-left .contact-block{align-items:center}
       .about-right{padding-top:20px}
       .scroll-stack-card{padding:24px 18px;border-radius:0 14px 14px 0}
+      #contact-title-root h1{font-size:4rem!important}
+      .contact-card{padding:32px 24px}
+      .portfolio-grid{grid-template-columns:repeat(2,1fr);gap:14px}
+      .ac-card{width:200px}
+      .ac-card-thumb{height:150px}
+      .pdf-viewer-toolbar{padding:8px 12px;gap:4px}
+      .pdf-viewer-toolbar .pdf-toolbar-btn{width:32px;height:32px;font-size:0.75rem}
+      .pdf-viewer-toolbar .pdf-page-info,.pdf-viewer-toolbar .pdf-zoom-level{font-size:0.7rem;min-width:40px}
+      .pdf-viewer-close{top:14px;right:14px;width:40px;height:40px;font-size:1rem}
+      .ac-detail-inner{max-width:100%}
+      .ac-detail-toolbar{gap:4px}
+      .ac-detail-toolbar .pdf-toolbar-btn{width:32px;height:32px;font-size:0.75rem}
+      .ac-detail-toolbar .pdf-page-info{font-size:0.7rem;min-width:40px}
+      .ac-detail-page{padding:60px 16px 30px}
+      .ac-detail-text{font-size:0.85rem}
+      .ac-card.active{width:340px}
     }
 
     /* ── Mobile (≤480px) ── */
@@ -1465,12 +1482,16 @@
       .contact-item-row .ci-value{font-size:0.85rem}
       .contact-dl{font-size:0.8rem;padding:10px 20px}
       #contact-title-root h1{font-size:3rem !important}
-      .ac-card{width:160px}
-      .ac-card-img,.ac-card .ac-detail-window{height:160px}
+      .ac-card{width:150px}
+      .ac-card-thumb{height:120px}
       .ac-card-info{padding:8px 10px}
-      .ac-card-title{font-size:0.72rem}
+      .ac-card-title{font-size:0.68rem}
       .ac-detail-page{padding:50px 12px 30px}
-      .ac-detail-window embed,.ac-detail-window iframe,.ac-detail-window object{height:400px}
+      .ac-detail-window canvas{max-width:100%!important}
+      .ac-detail-toolbar{gap:3px}
+      .ac-detail-toolbar .pdf-toolbar-btn{width:28px;height:28px;font-size:0.68rem}
+      .ac-detail-toolbar .pdf-page-info{font-size:0.65rem;min-width:36px}
+      .ac-card.active{width:280px}
       .jm-overlay .jm-modal-topbar{padding:12px 14px}
       .jm-overlay .jm-modal-scroll{padding:20px 14px 30px}
       .jm-dim-row{grid-template-columns:80px 1fr 40px;gap:8px;padding:12px 14px}
@@ -1478,6 +1499,12 @@
       .jm-modal-header h2{font-size:1.3rem}
       .portfolio-page{padding:50px 12px 30px}
       .portfolio-grid{grid-template-columns:1fr;gap:12px}
+      .pdf-viewer-toolbar{padding:6px 8px;gap:3px;flex-wrap:wrap}
+      .pdf-viewer-toolbar .pdf-toolbar-btn{width:28px;height:28px;font-size:0.68rem}
+      .pdf-viewer-toolbar .pdf-page-info,.pdf-viewer-toolbar .pdf-zoom-level{font-size:0.65rem;min-width:32px}
+      .pdf-viewer-toolbar .pdf-download-btn{width:28px;height:28px;font-size:0.7rem}
+      .pdf-viewer-close{top:10px;right:10px;width:36px;height:36px;font-size:0.9rem}
+      .pdf-viewer-content{padding:6px}
     }
   </style>
 </head>

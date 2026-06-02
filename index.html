@@ -1260,10 +1260,75 @@
     }
     .pdf-viewer-close:hover{background:rgba(239,76,172,0.2);border-color:var(--pink)}
     .pdf-viewer-content{
-      flex:1;padding:20px;padding-top:70px;
+      flex:1;padding:20px;padding-top:10px;
+      overflow:auto;display:flex;align-items:flex-start;justify-content:center;
+      position:relative;
     }
-    .pdf-viewer-content iframe{
-      width:100%;height:100%;border:none;border-radius:8px;
+    .pdf-viewer-content canvas{
+      display:block;margin:0 auto;border-radius:6px;
+      box-shadow:0 4px 30px rgba(0,0,0,0.5);
+    }
+    .pdf-viewer-toolbar{
+      display:none;align-items:center;gap:6px;
+      padding:10px 20px;
+      background:rgba(18,18,24,0.95);
+      border-bottom:1px solid rgba(255,255,255,0.08);
+      z-index:5;
+      flex-shrink:0;
+    }
+    .pdf-viewer-overlay.open .pdf-viewer-toolbar{display:flex}
+    .pdf-toolbar-btn{
+      width:36px;height:36px;border-radius:8px;
+      border:1px solid rgba(255,255,255,0.12);
+      background:rgba(255,255,255,0.04);
+      color:#fff;font-size:0.85rem;cursor:pointer;
+      display:flex;align-items:center;justify-content:center;
+      transition:all 0.2s;
+    }
+    .pdf-toolbar-btn:hover{background:rgba(239,76,172,0.15);border-color:var(--pink)}
+    .pdf-toolbar-btn:disabled{opacity:0.3;cursor:default;pointer-events:none}
+    .pdf-page-info,.pdf-zoom-level{
+      font-family:'JetBrains Mono',monospace;
+      font-size:0.78rem;color:var(--text-secondary);
+      min-width:60px;text-align:center;
+    }
+    .pdf-toolbar-spacer{flex:1}
+    .pdf-download-btn{
+      width:36px;height:36px;border-radius:8px;
+      border:1px solid rgba(255,255,255,0.12);
+      background:rgba(255,255,255,0.04);
+      color:#fff;font-size:0.9rem;cursor:pointer;
+      display:flex;align-items:center;justify-content:center;
+      transition:all 0.2s;text-decoration:none;
+    }
+    .pdf-download-btn:hover{background:rgba(239,76,172,0.15);border-color:var(--pink)}
+    .pdf-loading{
+      position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+      font-family:'JetBrains Mono',monospace;
+      font-size:0.85rem;color:var(--text-muted);
+      z-index:1;
+    }
+    /* Card detail PDF viewer */
+    .ac-detail-window canvas{
+      display:block;margin:0 auto;border-radius:6px;
+      box-shadow:0 2px 16px rgba(0,0,0,0.3);
+    }
+    .ac-detail-toolbar{
+      display:flex;align-items:center;gap:6px;
+      padding:8px 0;margin-bottom:8px;
+    }
+    /* Portfolio grid placeholders */
+    .portfolio-preview-placeholder{
+      position:absolute;inset:0;display:flex;
+      flex-direction:column;align-items:center;justify-content:center;
+      background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);
+      color:rgba(255,255,255,0.5);
+      font-size:2.5rem;
+    }
+    .portfolio-preview-placeholder span{
+      font-size:0.68rem;margin-top:4px;
+      font-family:'JetBrains Mono',monospace;
+      color:rgba(255,255,255,0.35);
     }
     .portfolio-item{
       cursor:pointer;
@@ -1505,6 +1570,7 @@
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js" crossorigin></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js" crossorigin></script>
   <script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" crossorigin></script>
 
   <!-- Antigravity 3D: Three.js ring particles -->
   <script>
@@ -2935,9 +3001,71 @@
         if(!overlay || !innerEl) return;
         innerEl.innerHTML =
           '<div class="ac-detail-text">'+(item.desc || '')+'</div>'+
-          '<div class="ac-detail-window"><iframe src="'+encodeURI(item.file)+'" width="100%" height="700px" style="border:none;"></iframe></div>'+
+          '<div class="ac-detail-toolbar">'+
+            '<button class="pdf-toolbar-btn" id="acDetailPrev" title="上一页">◀</button>'+
+            '<span class="pdf-page-info" id="acDetailPageInfo">- / -</span>'+
+            '<button class="pdf-toolbar-btn" id="acDetailNext" title="下一页">▶</button>'+
+            '<div class="pdf-toolbar-spacer"></div>'+
+            '<a class="pdf-download-btn" id="acDetailDownload" href="'+encodeURI(item.file)+'" download title="下载PDF">⬇</a>'+
+          '</div>'+
+          '<div class="ac-detail-window"><canvas id="acDetailCanvas" style="display:none;"></canvas><div class="pdf-loading" id="acDetailLoading">📄 加载中...</div></div>';
         overlay.classList.add('open');
         document.body.style.overflow = 'hidden';
+
+        if(typeof pdfjsLib !== 'undefined'){
+          var acCanvas = document.getElementById('acDetailCanvas');
+          var acLoading = document.getElementById('acDetailLoading');
+          var acPrev = document.getElementById('acDetailPrev');
+          var acNext = document.getElementById('acDetailNext');
+          var acPageInfo = document.getElementById('acDetailPageInfo');
+          var acScale = 1.2;
+          var acDoc = null;
+          var acPage = 1;
+          var acTotal = 0;
+
+          function renderAcPage(){
+            if(!acDoc) return;
+            acDoc.getPage(acPage).then(function(page){
+              var viewport = page.getViewport({scale: acScale});
+              var dpr = Math.min(window.devicePixelRatio || 1, 2);
+              acCanvas.height = Math.floor(viewport.height * dpr);
+              acCanvas.width = Math.floor(viewport.width * dpr);
+              acCanvas.style.height = viewport.height + 'px';
+              acCanvas.style.width = '100%';
+              acCanvas.style.maxWidth = viewport.width + 'px';
+              var ctx = acCanvas.getContext('2d');
+              ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+              page.render({canvasContext: ctx, viewport: viewport});
+              acPageInfo.textContent = acPage + ' / ' + acTotal;
+              acPrev.disabled = acPage <= 1;
+              acNext.disabled = acPage >= acTotal;
+              acCanvas.style.display = 'block';
+              if(acLoading) acLoading.style.display = 'none';
+            });
+          }
+
+          pdfjsLib.getDocument(item.file).promise.then(function(pdf){
+            acDoc = pdf;
+            acTotal = pdf.numPages;
+            renderAcPage();
+            if(acPrev) acPrev.addEventListener('click', function(){ if(acPage > 1){ acPage--; renderAcPage(); } });
+            if(acNext) acNext.addEventListener('click', function(){ if(acPage < acTotal){ acPage++; renderAcPage(); } });
+          }).catch(function(err){
+            console.error('PDF load error:', err);
+            if(acLoading) acLoading.textContent = '⚠️ 加载失败';
+            acCanvas.style.display = 'none';
+            var fb = document.createElement('a');
+            fb.href = item.file; fb.target = '_blank';
+            fb.textContent = '📄 点击在新标签页中查看 PDF';
+            fb.style.cssText = 'color:var(--pink);text-decoration:none;font-family:JetBrains Mono,monospace;font-size:0.85rem;';
+            acCanvas.parentNode.appendChild(fb);
+          });
+        } else {
+          var acCanvas2 = document.getElementById('acDetailCanvas');
+          if(acCanvas2) acCanvas2.style.display = 'none';
+          var acLoading2 = document.getElementById('acDetailLoading');
+          if(acLoading2) acLoading2.innerHTML = '<a href="'+encodeURI(item.file)+'" target="_blank" style="color:var(--pink);text-decoration:none;">📄 点击在新标签页中查看 PDF</a>';
+        }
       }
 
       function closeCardDetail(){
@@ -3168,22 +3296,137 @@
   <!-- PDF fullscreen viewer -->
   <div class="pdf-viewer-overlay" id="pdfViewer">
     <button class="pdf-viewer-close" id="pdfViewerClose" title="关闭">✕</button>
-    <div class="pdf-viewer-content">
-      <iframe id="pdfEmbed" width="100%" height="100%" style="border:none;border-radius:8px;" allow="fullscreen"></iframe>
+    <div class="pdf-viewer-toolbar" id="pdfToolbar">
+      <button class="pdf-toolbar-btn" id="pdfPrev" title="上一页">◀</button>
+      <span class="pdf-page-info" id="pdfPageInfo">- / -</span>
+      <button class="pdf-toolbar-btn" id="pdfNext" title="下一页">▶</button>
+      <div class="pdf-toolbar-spacer"></div>
+      <button class="pdf-toolbar-btn" id="pdfZoomOut" title="缩小">−</button>
+      <span class="pdf-zoom-level" id="pdfZoomLevel">100%</span>
+      <button class="pdf-toolbar-btn" id="pdfZoomIn" title="放大">+</button>
+      <a class="pdf-download-btn" id="pdfDownloadBtn" href="#" download title="下载PDF">⬇</a>
+    </div>
+    <div class="pdf-viewer-content" id="pdfViewerContent">
+      <div class="pdf-loading" id="pdfLoading">📄 加载中...</div>
+      <canvas id="pdfCanvas"></canvas>
     </div>
   </div>
 
   <!-- Portfolio & PDF viewer handlers -->
   <script>
     (function(){
+      // ── PDF.js worker config ──
+      if(typeof pdfjsLib !== 'undefined'){
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      }
+
       var overlay = document.getElementById('portfolioOverlay');
       var closeBtn = document.getElementById('portfolioClose');
       var pdfViewer = document.getElementById('pdfViewer');
       var pdfClose = document.getElementById('pdfViewerClose');
-      var pdfEmbed = document.getElementById('pdfEmbed');
+      var pdfCanvas = document.getElementById('pdfCanvas');
+      var pdfLoading = document.getElementById('pdfLoading');
       var grid = document.getElementById('portfolioGrid');
 
-      // Folder config: folder name → file list
+      // Toolbar elements
+      var pdfPrev = document.getElementById('pdfPrev');
+      var pdfNext = document.getElementById('pdfNext');
+      var pdfPageInfo = document.getElementById('pdfPageInfo');
+      var pdfZoomOut = document.getElementById('pdfZoomOut');
+      var pdfZoomIn = document.getElementById('pdfZoomIn');
+      var pdfZoomLevel = document.getElementById('pdfZoomLevel');
+      var pdfDownload = document.getElementById('pdfDownloadBtn');
+
+      // PDF state
+      var pdfDoc = null;
+      var pdfCurrentPage = 1;
+      var pdfTotalPages = 0;
+      var pdfScale = 1.5;
+
+      // ── PDF Rendering ──
+      function renderCurrentPage(){
+        if(!pdfDoc || !pdfCanvas) return;
+        pdfDoc.getPage(pdfCurrentPage).then(function(page){
+          var viewport = page.getViewport({scale: pdfScale});
+          var dpr = Math.min(window.devicePixelRatio || 1, 2);
+          pdfCanvas.height = Math.floor(viewport.height * dpr);
+          pdfCanvas.width = Math.floor(viewport.width * dpr);
+          pdfCanvas.style.height = viewport.height + 'px';
+          pdfCanvas.style.width = viewport.width + 'px';
+          var ctx = pdfCanvas.getContext('2d');
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+          page.render({canvasContext: ctx, viewport: viewport});
+          pdfPageInfo.textContent = pdfCurrentPage + ' / ' + pdfTotalPages;
+          pdfZoomLevel.textContent = Math.round(pdfScale * 100) + '%';
+          pdfPrev.disabled = pdfCurrentPage <= 1;
+          pdfNext.disabled = pdfCurrentPage >= pdfTotalPages;
+          pdfCanvas.style.display = 'block';
+          if(pdfLoading) pdfLoading.style.display = 'none';
+        }).catch(function(err){
+          console.error('PDF render error:', err);
+          if(pdfLoading) pdfLoading.textContent = '⚠️ 加载失败';
+        });
+      }
+
+      function loadAndOpenPDF(url){
+        if(!pdfjsLib){
+          window.open(url, '_blank');
+          return;
+        }
+        pdfCurrentPage = 1;
+        pdfScale = 1.5;
+        pdfDoc = null;
+        pdfCanvas.style.display = 'none';
+        if(pdfLoading){ pdfLoading.style.display = 'block'; pdfLoading.textContent = '📄 加载中...'; }
+        pdfViewer.classList.add('open');
+        document.body.style.overflow = 'hidden';
+        if(pdfDownload) pdfDownload.href = url;
+
+        pdfjsLib.getDocument(url).promise.then(function(pdf){
+          pdfDoc = pdf;
+          pdfTotalPages = pdf.numPages;
+          renderCurrentPage();
+        }).catch(function(err){
+          console.error('PDF load error:', err);
+          if(pdfLoading) pdfLoading.textContent = '⚠️ 加载失败，请尝试下载';
+        });
+      }
+
+      function closePdfViewer(){
+        pdfViewer.classList.remove('open');
+        pdfDoc = null;
+        pdfCanvas.style.display = 'none';
+        document.body.style.overflow = '';
+      }
+
+      // ── Toolbar events ──
+      if(pdfPrev) pdfPrev.addEventListener('click', function(){
+        if(pdfCurrentPage > 1){ pdfCurrentPage--; renderCurrentPage(); }
+      });
+      if(pdfNext) pdfNext.addEventListener('click', function(){
+        if(pdfCurrentPage < pdfTotalPages){ pdfCurrentPage++; renderCurrentPage(); }
+      });
+      if(pdfZoomOut) pdfZoomOut.addEventListener('click', function(){
+        pdfScale = Math.max(0.5, pdfScale - 0.25);
+        renderCurrentPage();
+      });
+      if(pdfZoomIn) pdfZoomIn.addEventListener('click', function(){
+        pdfScale = Math.min(3, pdfScale + 0.25);
+        renderCurrentPage();
+      });
+      // Mouse wheel zoom
+      if(pdfViewer){
+        pdfViewer.addEventListener('wheel', function(e){
+          if(!pdfViewer.classList.contains('open')) return;
+          if(e.ctrlKey || e.metaKey){
+            e.preventDefault();
+            pdfScale = e.deltaY < 0 ? Math.min(3, pdfScale + 0.1) : Math.max(0.5, pdfScale - 0.1);
+            renderCurrentPage();
+          }
+        }, {passive: false});
+      }
+
+      // ── Folder config ──
       var folderConfig = {
         '作品集': Array.from({length:18},function(_,i){return '作品集/'+(i+1)+'.pdf';}),
         '正大杯': ['正大杯/正大杯-口袋公园研究报告.pdf']
@@ -3200,12 +3443,11 @@
           item.innerHTML =
             '<div class="portfolio-preview">'+
               '<button class="portfolio-expand-btn" title="放大查看">⛶</button>'+
-              '<iframe src="'+encodeURI(pdfSrc)+'" width="100%" height="100%" style="border:none;" allow="fullscreen"></iframe>'+
+              '<div class="portfolio-preview-placeholder">📄<span>PDF</span></div>'+
             '</div>'+
             '<div class="portfolio-label">'+name+'</div>';
           grid.appendChild(item);
         });
-        // Re-bind expand buttons
         bindExpandButtons();
       }
 
@@ -3215,17 +3457,12 @@
         document.body.style.overflow = 'hidden';
       };
       window.openPdfDirect = function(pdfSrc){
-        pdfEmbed.src = encodeURI(pdfSrc);
-        pdfViewer.classList.add('open');
+        loadAndOpenPDF(pdfSrc);
       };
 
       function closePortfolio(){
         overlay.classList.remove('open');
         document.body.style.overflow = '';
-      }
-      function closePdfViewer(){
-        pdfViewer.classList.remove('open');
-        pdfEmbed.src = '';
       }
 
       if(closeBtn) closeBtn.addEventListener('click', closePortfolio);
@@ -3235,22 +3472,28 @@
         });
       }
 
-      // Click expand button to open PDF viewer
       function bindExpandButtons(){
         document.querySelectorAll('.portfolio-expand-btn').forEach(function(btn){
           btn.addEventListener('click', function(e){
             e.stopPropagation();
             var item = this.closest('.portfolio-item');
             var pdfSrc = item ? item.getAttribute('data-pdf') : null;
-            if(pdfSrc){
-              pdfEmbed.src = encodeURI(pdfSrc);
-              pdfViewer.classList.add('open');
-            }
+            if(pdfSrc){ loadAndOpenPDF(pdfSrc); }
           });
         });
       }
 
-      // PDF viewer close
+      // Click portfolio item to open viewer
+      if(grid){
+        grid.addEventListener('click', function(e){
+          var item = e.target.closest('.portfolio-item');
+          if(!item) return;
+          if(e.target.closest('.portfolio-expand-btn')) return;
+          var pdfSrc = item.getAttribute('data-pdf');
+          if(pdfSrc){ loadAndOpenPDF(pdfSrc); }
+        });
+      }
+
       if(pdfClose) pdfClose.addEventListener('click', closePdfViewer);
       if(pdfViewer){
         pdfViewer.addEventListener('click', function(e){
@@ -3258,13 +3501,14 @@
         });
       }
 
+      // Keyboard: Escape + Arrow keys for PDF nav
       document.addEventListener('keydown', function(e){
-        if(e.key === 'Escape'){
-          if(pdfViewer && pdfViewer.classList.contains('open')){
-            closePdfViewer();
-          } else if(overlay && overlay.classList.contains('open')){
-            closePortfolio();
-          }
+        if(pdfViewer && pdfViewer.classList.contains('open')){
+          if(e.key === 'Escape'){ closePdfViewer(); }
+          else if(e.key === 'ArrowLeft'){ if(pdfCurrentPage > 1){ pdfCurrentPage--; renderCurrentPage(); } }
+          else if(e.key === 'ArrowRight'){ if(pdfCurrentPage < pdfTotalPages){ pdfCurrentPage++; renderCurrentPage(); } }
+        } else if(overlay && overlay.classList.contains('open')){
+          if(e.key === 'Escape'){ closePortfolio(); }
         }
       });
     })();
